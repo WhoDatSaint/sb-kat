@@ -1,3 +1,4 @@
+/*
 package com.acme.myapp;
 
 import org.junit.Test;
@@ -14,3 +15,4 @@ public class SpringbootKatharsisApplicationTests {
 	}
 
 }
+*/
