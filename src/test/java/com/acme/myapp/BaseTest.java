@@ -2,6 +2,9 @@ package com.acme.myapp;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.ValidatableResponse;
+import io.katharsis.client.KatharsisClient;
+import io.katharsis.jpa.JpaModule;
+import io.katharsis.validation.ValidationModule;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -20,71 +23,54 @@ import static org.springframework.http.HttpStatus.*;
 @WebIntegrationTest("server.port:0")
 public abstract class BaseTest {
 
-    @Value("${local.server.port}")
-    protected int port;
+	@Value("${local.server.port}")
+	protected int port;
 
-    protected String jsonApiSchema;
+	protected String jsonApiSchema;
 
-    @Before
-    public final void before() {
-        RestAssured.port = port;
-        loadJsonApiSchema();
-    }
+	protected KatharsisClient client;
 
-    private void loadJsonApiSchema() {
-        try {
-            jsonApiSchema = loadFile("json-api-schema.json");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
+	@Before
+	public final void before() {
+		RestAssured.port = port;
+		loadJsonApiSchema();
 
-    private static String loadFile(String filename) throws Exception {
-        InputStream inputStream = BaseTest.class.getClassLoader().getResourceAsStream(
-                filename);
-        return IOUtils.toString(inputStream);
-    }
+		client = new KatharsisClient("http://localhost:" + port + "/api");
+		client.addModule(ValidationModule.newInstance());
+		client.addModule(JpaModule.newClientModule("io.katharsis.example.springboot.simple.domain.jpa"));
+	}
 
-    protected void testFindOne(String url) {
-        ValidatableResponse response = RestAssured.given()
-                .contentType("application/json")
-                .when()
-                .get(url)
-                .then()
-                .statusCode(OK.value());
-        response
-                .assertThat()
-                .body(matchesJsonSchema(jsonApiSchema));
-    }
+	private void loadJsonApiSchema() {
+		try {
+			jsonApiSchema = loadFile("json-api-schema.json");
+		}
+		catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+	}
 
-    protected void testFindOne_NotFound(String url) {
-        RestAssured.given()
-                .contentType("application/json")
-                .when()
-                .get(url)
-                .then()
-                .statusCode(NOT_FOUND.value());
-    }
+	private static String loadFile(String filename) throws Exception {
+		InputStream inputStream = BaseTest.class.getClassLoader().getResourceAsStream(filename);
+		return IOUtils.toString(inputStream);
+	}
 
-    protected void testFindMany(String url) {
-        ValidatableResponse response = RestAssured.given()
-                .contentType("application/json")
-                .when()
-                .get(url)
-                .then()
-                .statusCode(OK.value());
-        response
-                .assertThat()
-                .body(matchesJsonSchema(jsonApiSchema));
-    }
+	protected void testFindOne(String url) {
+		ValidatableResponse response = RestAssured.given().contentType("application/json").when().get(url).then()
+				.statusCode(OK.value());
+		response.assertThat().body(matchesJsonSchema(jsonApiSchema));
+	}
 
-    protected void testDelete(String url) {
-        RestAssured.given()
-                .contentType("application/json")
-                .when()
-                .delete(url)
-                .then()
-                .statusCode(NO_CONTENT.value());
-    }
+	protected void testFindOne_NotFound(String url) {
+		RestAssured.given().contentType("application/json").when().get(url).then().statusCode(NOT_FOUND.value());
+	}
 
+	protected void testFindMany(String url) {
+		ValidatableResponse response = RestAssured.given().contentType("application/json").when().get(url).then()
+				.statusCode(OK.value());
+		response.assertThat().body(matchesJsonSchema(jsonApiSchema));
+	}
+
+	protected void testDelete(String url) {
+		RestAssured.given().contentType("application/json").when().delete(url).then().statusCode(NO_CONTENT.value());
+	}
 }

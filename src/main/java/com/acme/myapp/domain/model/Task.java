@@ -16,15 +16,14 @@
  */
 package com.acme.myapp.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.katharsis.resource.annotations.JsonApiId;
 import io.katharsis.resource.annotations.JsonApiIncludeByDefault;
 import io.katharsis.resource.annotations.JsonApiResource;
 import io.katharsis.resource.annotations.JsonApiToOne;
 
 import javax.validation.constraints.Size;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonApiResource(type = "tasks")
 public class Task {
@@ -41,7 +40,7 @@ public class Task {
     @JsonIgnore
     private Long projectId;
 
-    @JsonApiToOne
+    @JsonApiToOne(opposite="tasks")
     @JsonApiIncludeByDefault
     private Project project;
 

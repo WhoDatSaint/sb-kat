@@ -18,9 +18,9 @@ package com.acme.myapp.domain.repository;
 
 import com.acme.myapp.domain.model.Project;
 import com.acme.myapp.domain.model.Task;
-import io.katharsis.queryParams.QueryParams;
-import io.katharsis.repository.annotations.*;
-import io.katharsis.utils.PropertyUtils;
+import io.katharsis.core.internal.utils.PropertyUtils;
+import io.katharsis.legacy.repository.annotations.*;
+import io.katharsis.queryspec.QuerySpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,15 +28,18 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Manually-written, annotation-based relationship repository example.
+ */
 @JsonApiRelationshipRepository(source = Project.class, target = Task.class)
 @Component
-public class ProjectToTaskRepository {
+public class ProjectToTaskRepositoryImpl {
 
-    private final ProjectRepository projectRepository;
-    private final TaskRepository taskRepository;
+    private final ProjectRepositoryImpl projectRepository;
+    private final TaskRepositoryImpl taskRepository;
 
     @Autowired
-    public ProjectToTaskRepository(ProjectRepository projectRepository, TaskRepository taskRepository) {
+    public ProjectToTaskRepositoryImpl(ProjectRepositoryImpl projectRepository, TaskRepositoryImpl taskRepository) {
         this.projectRepository = projectRepository;
         this.taskRepository = taskRepository;
     }
@@ -67,11 +70,15 @@ public class ProjectToTaskRepository {
     public void addRelations(Project project, Iterable<Long> taskIds, String fieldName) {
         List<Task> newTaskList = new LinkedList<>();
         Iterable<Task> tasksToAdd = taskRepository.findAll(taskIds, null);
-        tasksToAdd.forEach(newTaskList::add);
+        for (Task task: tasksToAdd) {
+            newTaskList.add(task);
+        }
         try {
             if (PropertyUtils.getProperty(project, fieldName) != null) {
-                Iterable<Task> projects = (Iterable<Task>) PropertyUtils.getProperty(project, fieldName);
-                projects.forEach(newTaskList::add);
+                Iterable<Task> tasks = (Iterable<Task>) PropertyUtils.getProperty(project, fieldName);
+                for (Task task: tasks) {
+                    newTaskList.add(task);
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -100,7 +107,9 @@ public class ProjectToTaskRepository {
                     }
                 }
                 List<Task> newTaskList = new LinkedList<>();
-                tasks.forEach(newTaskList::add);
+                for (Task task: tasks) {
+                    newTaskList.add(task);
+                }
 
                 PropertyUtils.setProperty(project, fieldName, newTaskList);
                 projectRepository.save(project);
@@ -111,7 +120,7 @@ public class ProjectToTaskRepository {
     }
 
     @JsonApiFindOneTarget
-    public Task findOneTarget(Long projectId, String fieldName, QueryParams requestParams) {
+    public Task findOneTarget(Long projectId, String fieldName, QuerySpec requestParams) {
         Project project = projectRepository.findOne(projectId, requestParams);
         try {
             return (Task) PropertyUtils.getProperty(project, fieldName);
@@ -121,7 +130,7 @@ public class ProjectToTaskRepository {
     }
 
     @JsonApiFindManyTargets
-    public Iterable<Task> findManyTargets(Long projectId, String fieldName, QueryParams requestParams) {
+    public Iterable<Task> findManyTargets(Long projectId, String fieldName, QuerySpec requestParams) {
         Project project = projectRepository.findOne(projectId, requestParams);
         try {
             return (Iterable<Task>) PropertyUtils.getProperty(project, fieldName);

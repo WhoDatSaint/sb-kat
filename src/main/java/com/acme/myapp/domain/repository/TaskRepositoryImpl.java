@@ -17,40 +17,32 @@
 package com.acme.myapp.domain.repository;
 
 import com.acme.myapp.domain.model.Task;
-import io.katharsis.queryParams.QueryParams;
-import io.katharsis.repository.annotations.JsonApiDelete;
-import io.katharsis.repository.annotations.JsonApiFindAll;
-import io.katharsis.repository.annotations.JsonApiFindAllWithIds;
-import io.katharsis.repository.annotations.JsonApiFindOne;
-import io.katharsis.repository.annotations.JsonApiResourceRepository;
-import io.katharsis.repository.annotations.JsonApiSave;
-import io.katharsis.resource.exception.ResourceNotFoundException;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-
+import io.katharsis.errorhandling.exception.ResourceNotFoundException;
+import io.katharsis.legacy.repository.annotations.*;
+import io.katharsis.queryspec.QuerySpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import com.google.common.collect.Iterables;
+import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Component
 @JsonApiResourceRepository(Task.class)
 @Validated
-public class TaskRepository {
+public class TaskRepositoryImpl {
     private static final Map<Long, Task> REPOSITORY = new ConcurrentHashMap<>();
     private static final AtomicLong ID_GENERATOR = new AtomicLong(4);
 
-    private final ProjectRepository projectRepository;
+    private final ProjectRepositoryImpl projectRepository;
 
     @Autowired @Lazy
-    public TaskRepository(ProjectRepository projectRepository) {
+    public TaskRepositoryImpl(ProjectRepositoryImpl projectRepository) {
         this.projectRepository = projectRepository;
         Task task = new Task(1L, "Create tasks");
         task.setProjectId(123L);
@@ -73,29 +65,33 @@ public class TaskRepository {
     }
 
     @JsonApiFindOne
-    public Task findOne(Long taskId, QueryParams requestParams) {
+    public Task findOne(Long taskId, QuerySpec requestParams) {
         Task task = REPOSITORY.get(taskId);
         if (task == null) {
             throw new ResourceNotFoundException("Project not found!");
         }
         if (task.getProject() == null) {
-            task.setProject(projectRepository.findOne(task.getProjectId(), null));
+            task.setProject(projectRepository.findOne(task.getProjectId(), new QuerySpec(Task.class)));
         }
         return task;
     }
 
     @JsonApiFindAll
-    public Iterable<Task> findAll(QueryParams requestParams) {
+    public Iterable<Task> findAll(QuerySpec requestParams) {
         return REPOSITORY.values();
     }
 
     @JsonApiFindAllWithIds
-    public Iterable<Task> findAll(Iterable<Long> taskIds, QueryParams requestParams) {
-        return REPOSITORY.entrySet()
-                .stream()
-                .filter(p -> Iterables.contains(taskIds, p.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-                .values();
+    public Iterable<Task> findAll(Iterable<Long> taskIds, QuerySpec requestParams) {
+        List<Task> foundTasks = new ArrayList<>();
+        for (Map.Entry<Long, Task> entry: REPOSITORY.entrySet()) {
+            for (Long id: taskIds) {
+                if (id.equals(entry.getKey())) {
+                    foundTasks.add(entry.getValue());
+                }
+            }
+        }
+        return foundTasks;
     }
 
     @JsonApiDelete

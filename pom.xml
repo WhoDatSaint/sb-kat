@@ -23,8 +23,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-<!--		<katharsis.version>3.0.1</katharsis.version>    -->
-        <katharsis.version>2.4.0</katharsis.version>
+		<katharsis.version>3.0.1</katharsis.version>
+        <hibernate.version>5.1.0.Final</hibernate.version>
 	</properties>
 
 	<dependencies>
@@ -37,23 +37,58 @@
 			<artifactId>spring-boot-starter-jetty</artifactId>
 			<scope>provided</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-<!--        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot</artifactId>
-            <version>1.3.2.RELEASE</version>
-            <scope>test</scope>
-        </dependency>-->
 
+        <dependency>
+            <groupId>io.katharsis</groupId>
+            <artifactId>katharsis-core</artifactId>
+            <version>${katharsis.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.katharsis</groupId>
             <artifactId>katharsis-spring</artifactId>
             <version>${katharsis.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.katharsis</groupId>
+            <artifactId>katharsis-validation</artifactId>
+            <version>${katharsis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.katharsis</groupId>
+            <artifactId>katharsis-client</artifactId>
+            <version>${katharsis.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.katharsis</groupId>
+            <artifactId>katharsis-jpa</artifactId>
+            <version>${katharsis.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernate.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>${hibernate.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
@@ -77,6 +112,7 @@
             <version>1.3.2</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
 	<build>
